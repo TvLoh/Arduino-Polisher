@@ -1,16 +1,19 @@
 #include <Arduino.h>
 
 #define POTIPIN A0
-#define EN A4
-#define DIR A1
-#define CLK A2
-#define LEVEL A3
+#define EN PD2
+#define DIR PD5
+#define CLK PD4
+#define LEVEL PD3
 #define MICROSTEKPPING 0.25
+#define INTERVALL 300*1000000       // in microsec.
+#define INTERVALL_PAUSE 60*1000    // in millisec.
 #define VAL_OFF 100000
 #define BAUDRATE 115200
 
 int  val  = 0;
 bool run  = false;
+unsigned long intervall_timer = micros();
 unsigned long micro = micros();
 
 void setup() {
@@ -46,6 +49,18 @@ void setup() {
 
 void loop() {
 val = map(analogRead(POTIPIN),0,1023,(8888),(740));
+
+if (intervall_timer+INTERVALL < micros()){
+  intervall_timer = micros();
+  run == false;
+  digitalWrite(CLK, LOW);
+  digitalWrite(EN, LOW);
+  //Serial.println("Intervall: Start");
+  delay(INTERVALL_PAUSE);
+  //Serial.println("Intervall stop");
+  }
+
+  
 //Serial.println(val);
 // check if poti persistence in higher position
   if (analogRead(POTIPIN) > 10)
@@ -54,7 +69,7 @@ val = map(analogRead(POTIPIN),0,1023,(8888),(740));
 // check if polisher is running
     if (micro+(val*MICROSTEKPPING) < micros() && run)
     {
-      Serial.print(micros() - micro); Serial.print(";  "); Serial.println(val);
+      //Serial.print(micros() - micro); Serial.print(";  "); Serial.println(val);
       digitalWrite(CLK, HIGH);
       delayMicroseconds(4);
       digitalWrite(CLK, LOW);
@@ -66,22 +81,23 @@ val = map(analogRead(POTIPIN),0,1023,(8888),(740));
     {
       //Serial.println("Motor start");
 // if polisher starts slowly if it is nocht running
-      for (size_t i = 10; i >= 1; i--)
+      for (size_t i = 100; i > 0; i--)
       {
         //Serial.print("Motor Start i = "); Serial.println(i);
         digitalWrite(CLK, HIGH);
         delayMicroseconds(4);
         digitalWrite(CLK, LOW);
-        delayMicroseconds(8888000*i);
-        run = true;
+        delayMicroseconds(50*i);
+        //Serial.println(i);
+        
       }
-      
+        run = true;      
     }   
   }
 // if poti persistence in lower poksition
   else  
   {
-    Serial.println("Motor aus");
+    //Serial.println("Motor aus");
     digitalWrite(CLK, LOW);
     digitalWrite(EN, LOW);
     micro = micros();
