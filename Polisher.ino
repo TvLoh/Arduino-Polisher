@@ -5,7 +5,7 @@
 #define DIR PD5
 #define CLK PD4
 #define LEVEL PD3
-#define MICROSTEKPPING 0.25
+#define MICROSTEPPING 0.25
 #define INTERVALL 300*1000000       // in microsec.
 #define INTERVALL_PAUSE 60*1000    // in millisec.
 #define VAL_OFF 100000
@@ -49,7 +49,7 @@ void setup() {
 
 void loop() {
 val = map(analogRead(POTIPIN),0,1023,(8888),(740));
-
+/*
 if (intervall_timer+INTERVALL < micros()){
   intervall_timer = micros();
   run == false;
@@ -59,7 +59,7 @@ if (intervall_timer+INTERVALL < micros()){
   delay(INTERVALL_PAUSE);
   //Serial.println("Intervall stop");
   }
-
+*/
   
 //Serial.println(val);
 // check if poti persistence in higher position
@@ -67,7 +67,7 @@ if (intervall_timer+INTERVALL < micros()){
   {
     digitalWrite(EN, HIGH);
 // check if polisher is running
-    if (micro+(val*MICROSTEKPPING) < micros() && run)
+    if (micro+(val*MICROSTEPPING) < micros() && run)
     {
       //Serial.print(micros() - micro); Serial.print(";  "); Serial.println(val);
       digitalWrite(CLK, HIGH);
@@ -80,7 +80,7 @@ if (intervall_timer+INTERVALL < micros()){
     }else if (run == false)
     {
       //Serial.println("Motor start");
-// if polisher starts slowly if it is nocht running
+      // if polisher starts slowly if it is nocht running
       for (size_t i = 100; i > 0; i--)
       {
         //Serial.print("Motor Start i = "); Serial.println(i);
@@ -88,6 +88,7 @@ if (intervall_timer+INTERVALL < micros()){
         delayMicroseconds(4);
         digitalWrite(CLK, LOW);
         delayMicroseconds(50*i);
+        delay(50);
         //Serial.println(i);
         
       }
