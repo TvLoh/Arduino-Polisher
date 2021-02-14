@@ -11,10 +11,11 @@
 #define VAL_OFF 100000
 #define BAUDRATE 115200
 
-int  val  = 0;
+int  potiMap  = 0;
 bool run  = false;
 unsigned long intervall_timer = micros();
 unsigned long micro = micros();
+unsigned long watchOverflow = micros() + 50000;
 
 void setup() {
   pinMode(POTIPIN,  INPUT);
@@ -31,7 +32,7 @@ void setup() {
 
   Serial.begin(BAUDRATE);
   Serial.println("Hello, im redy for rumble");
-  Serial.print("val = "); Serial.print(val); Serial.print("; run = "); Serial.println(run);
+  Serial.print("potiMap = "); Serial.print(potiMap); Serial.print("; run = "); Serial.println(run);
   Serial.print("Baudrate = "); Serial.println(BAUDRATE);
   Serial.println("/////////////////////////////////////////////////////////////////////////");
 
@@ -48,60 +49,38 @@ void setup() {
 }
 
 void loop() {
-val = map(analogRead(POTIPIN),0,1023,(8888),(740));
-/*
-if (intervall_timer+INTERVALL < micros()){
-  intervall_timer = micros();
-  run == false;
-  digitalWrite(CLK, LOW);
-  digitalWrite(EN, LOW);
-  //Serial.println("Intervall: Start");
-  delay(INTERVALL_PAUSE);
-  //Serial.println("Intervall stop");
-  }
-*/
-  
-//Serial.println(val);
-// check if poti persistence in higher position
-  if (analogRead(POTIPIN) > 10)
-  {
-    digitalWrite(EN, HIGH);
-// check if polisher is running
-    if (micro+(val*MICROSTEPPING) < micros() && run)
-    {
-      //Serial.print(micros() - micro); Serial.print(";  "); Serial.println(val);
-      digitalWrite(CLK, HIGH);
-      delayMicroseconds(4);
-      digitalWrite(CLK, LOW);
-      delayMicroseconds(4);
-
-      micro = micros();
-
-    }else if (run == false)
-    {
-      //Serial.println("Motor start");
-      // if polisher starts slowly if it is nocht running
-      for (size_t i = 100; i > 0; i--)
+  potiMap = map(analogRead(POTIPIN),0,1023,(8888),(1500));
+  // check if poti persistence in higher position
+  if( watchOverflow + 50000 < micros()){
+    if (analogRead(POTIPIN) > 10){
+      digitalWrite(EN, HIGH);
+      // check if polisher is running
+      if ( !run )
       {
-        //Serial.print("Motor Start i = "); Serial.println(i);
-        digitalWrite(CLK, HIGH);
-        delayMicroseconds(4);
-        digitalWrite(CLK, LOW);
-        delayMicroseconds(50*i);
-        delay(50);
-        //Serial.println(i);
-        
-      }
-        run = true;      
-    }   
-  }
-// if poti persistence in lower poksition
-  else  
+        for (size_t i = 250; i > 10; i--)
+        {
+          if (analogRead(POTIPIN) > 10)
+          {
+            oneStep(CLK);
+            delayMicroseconds(80*i*MICROSTEPPING);
+            run = true;      
+          }else{
+            motorStop();
+            break;
+          }
+        }
+      }else if (micro + ( potiMap*MICROSTEPPING ) < micros() && run){
+        oneStep(CLK);
+        micro = micros(); 
+      }   
+    }else
+    {
+      motorStop();
+    }
+  }else
   {
-    //Serial.println("Motor aus");
-    digitalWrite(CLK, LOW);
-    digitalWrite(EN, LOW);
+    watchOverflow = micros()+50000;
     micro = micros();
-    run = false;
+    motorStop();
   }
 }
