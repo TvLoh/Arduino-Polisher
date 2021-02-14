@@ -7,7 +7,7 @@
 #define LEVEL PD3
 #define MICROSTEPPING 0.25
 #define INTERVALL 300*1000000       // in microsec.
-#define INTERVALL_PAUSE 60*1000    // in millisec.
+#define INTERVALL_PAUSE 60*1000     // in millisec.
 #define VAL_OFF 100000
 #define BAUDRATE 115200
 
@@ -15,7 +15,7 @@ int  potiMap  = 0;
 bool run  = false;
 unsigned long intervall_timer = micros();
 unsigned long micro = micros();
-unsigned long watchOverflow = micros() + 50000;
+unsigned long watchOverflow = micros();
 
 void setup() {
   pinMode(POTIPIN,  INPUT);
@@ -46,12 +46,13 @@ void setup() {
   digitalWrite(        DIR, HIGH);
   digitalWrite(      LEVEL, HIGH);
   delay(500);
+  watchOverflow = watchOverflow + 400000;
 }
 
 void loop() {
   potiMap = map(analogRead(POTIPIN),0,1023,(8888),(1500));
   // check if poti persistence in higher position
-  if( watchOverflow + 50000 < micros()){
+  if( watchOverflow < micros()){
     if (analogRead(POTIPIN) > 10){
       digitalWrite(EN, HIGH);
       // check if polisher is running
@@ -79,8 +80,9 @@ void loop() {
     }
   }else
   {
-    watchOverflow = micros()+50000;
-    micro = micros();
     motorStop();
+    watchOverflow = micros()+400000;
+    delay(500);
+    micro = micros();
   }
 }
