@@ -50,7 +50,7 @@ void setup() {
 }
 
 void loop() {
-  potiMap = map(analogRead(POTIPIN),0,1023,(8888),(1500));
+  potiMap = map(analogRead(POTIPIN),0,1023,(15000),(8000));
   // check if poti persistence in higher position
   if( watchOverflow < micros()){
     if (analogRead(POTIPIN) > 10){
@@ -58,12 +58,12 @@ void loop() {
       // check if polisher is running
       if ( !run )
       {
-        for (size_t i = 250; i > 10; i--)
+        for (size_t i = 80; i > 10; i--)
         {
           if (analogRead(POTIPIN) > 10)
           {
             oneStep(CLK);
-            delayMicroseconds(80*i*MICROSTEPPING);
+            delayMicroseconds(400*i*MICROSTEPPING);
             run = true;      
           }else{
             motorStop();
